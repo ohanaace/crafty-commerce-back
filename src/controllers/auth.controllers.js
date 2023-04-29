@@ -30,7 +30,6 @@ export async function signUp(req, res) {
       await db.collection("users").insertOne(info);
       return res.status(201).send("User criado com sucesso!");
     } catch (err) {
-      console.log(err);
       return res.status(500).send(err.message);
     }
 };
