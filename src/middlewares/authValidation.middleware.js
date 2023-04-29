@@ -13,6 +13,7 @@ export async function validateAuth(req, res, next) {
         if(!user) return res.sendStatus(401);
         res.locals.user = user;
         res.locals.session = session;
+        res.locals.token = token;
         next();
     } catch (error) {
         res.status(500).send(error.message);
