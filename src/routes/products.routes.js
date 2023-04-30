@@ -13,7 +13,7 @@ prodRouter.get("/products/:type", filterProductsType);
 prodRouter.get("/product/:id", filterProductId);
 prodRouter.get("/cartProducts", cartProductsList);
 prodRouter.post("/addProduct/:id", addProductCart);
-prodRouter.post("/deleteProduct", deleteProductCart);
+prodRouter.get("/deleteProduct/:id", deleteProductCart);
 prodRouter.post("/checkout", checkout);
 prodRouter.post ("/modifyProductQuantity/:type", modifyProductQuantity);
 

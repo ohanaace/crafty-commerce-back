@@ -1,5 +1,6 @@
-import { ObjectId } from "bson";
+
 import { db } from "../database/database.js";
+import { ObjectId } from "mongodb";
 
 export async function checkout(req, res) {
     // na página do carrinho de compras quando o usuário clicar no botão finalizar compra
@@ -59,18 +60,13 @@ export async function cartProductsList(req, res) {
 
 export async function addProductCart(req, res) {
     const { id } = req.params;
-    // na página de descrição de um produto
     const { quantity } = req.body;
     const token = res.locals.token;
-    console.log(token);
     const user = res.locals.user
-    // product = {name, description, price, quantity, type, id, image}
-    // products = [{name, description, price, quantity, type, id, image}, ...]
 
     try {
         const newProduct = await db.collection("products").findOne({_id: new ObjectId(id)});
         const completeProduct = {...newProduct, quantity};
-        //   const user = await db.collection("users").findOne({token});
         const prods = await db.collection("cart").findOne({ userId: user._id });
         console.log(completeProduct);
         if (!prods) {
@@ -79,8 +75,7 @@ export async function addProductCart(req, res) {
             await db.collection("cart").insertOne({ products, userId: user._id });
         } else {
             const editedProducts = [...prods.products, completeProduct];
-            const editedCart = { products: editedProducts, user: {userId: user._id }};
-            await db.collection("cart").updateOne({ userId: user._id }, { $set: editedCart });
+            await db.collection("cart").updateOne({ userId: user._id }, { $set: { products: editedProducts} });
         }
 
         return res.status(200).send("Produtos adicionados no carrinho com sucesso")
@@ -122,17 +117,22 @@ export async function modifyProductQuantity(req, res) {
 
 export async function deleteProductCart(req, res) {
     // na página do carrinho de compras
-    const { product } = req.body;
+    const { id } = req.params;
     const token = res.locals.token;
-    const id = product._id;
 
     try {
-        const user = await db.collection("users").findOne({ token });
-        const prods = await db.collection("cart").findOne({ userId: user._id });
+        const user = await db.collection("sessions").findOne({ token });
+        const prods = await db.collection("cart").findOne({ userId: user.userId });
         if (!prods) return res.sendStatus(404);
-        const newProductsArray = prods.filter((obj) => obj.products.id !== id);
-        await db.collection("cart").updateOne({ userId: user._id }, { $set: { user: {userId: user._id}, products: newProductsArray } });
-        return res.status(200).send("Produto deletado com sucesso")
+        const update = await db.collection("cart").updateOne(
+            { userId: user.userId },
+            { $pull: { products: { _id:  new ObjectId(id)} } }
+        );
+        if (update.modifiedCount !== 0) {
+            return res.status(200).send("Produto deletado com sucesso")
+        } else {
+            return res.status(404).send("O produto não foi encontrado na lista de produtos do carrinho do usuário")
+        }
     } catch (err) {
         return res.status(500).send(err.message);
     }
