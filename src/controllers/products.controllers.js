@@ -64,8 +64,8 @@ export async function addProductCart(req, res) {
     const token = res.locals.token;
     console.log(token);
     const user = res.locals.user
-    // product = {name, description, price, quantity, type, id}
-    // products = [{name, description, price, quantity, type, id}, ...]
+    // product = {name, description, price, quantity, type, id, image}
+    // products = [{name, description, price, quantity, type, id, image}, ...]
 
     try {
         const newProduct = await db.collection("products").findOne({_id: new ObjectId(id)});
@@ -79,7 +79,7 @@ export async function addProductCart(req, res) {
             await db.collection("cart").insertOne({ products, userId: user._id });
         } else {
             const editedProducts = [...prods.products, completeProduct];
-            const editedCart = { products: editedProducts, userId: user._id };
+            const editedCart = { products: editedProducts, user: {userId: user._id }};
             await db.collection("cart").updateOne({ userId: user._id }, { $set: editedCart });
         }
 
@@ -104,14 +104,14 @@ export async function modifyProductQuantity(req, res) {
             product.quantity = product.quantity++;
             const newProductsArray = prods.filter((obj) => obj.products.id !== productId);
             const finalProductsArray = [...newProductsArray, product];
-            await db.collection("cart").updateOne({ userId: user._id }, { $set: { userId: user._id, products: finalProductsArray } });
+            await db.collection("cart").updateOne({ userId: user._id }, { $set: { user: {userId: user._id}, products: finalProductsArray } });
             return res.status(200).send("Quantidade de produto adicionada com sucesso");
         }
         if (type === "minus") {
             product.quantity = product.quantity--;
             const newProductsArray = prods.filter((obj) => obj.products.id !== productId);
             const finalProductsArray = [...newProductsArray, product];
-            await db.collection("cart").updateOne({ userId: user._id }, { $set: { userId: user._id, products: finalProductsArray } });
+            await db.collection("cart").updateOne({ userId: user._id }, { $set: { user: {userId: user._id}, products: finalProductsArray } });
             return res.status(200).send("Quantidade de produto diminuída com sucesso");
         }
 
@@ -131,7 +131,7 @@ export async function deleteProductCart(req, res) {
         const prods = await db.collection("cart").findOne({ userId: user._id });
         if (!prods) return res.sendStatus(404);
         const newProductsArray = prods.filter((obj) => obj.products.id !== id);
-        await db.collection("cart").updateOne({ userId: user._id }, { $set: { userId: user._id, products: newProductsArray } });
+        await db.collection("cart").updateOne({ userId: user._id }, { $set: { user: {userId: user._id}, products: newProductsArray } });
         return res.status(200).send("Produto deletado com sucesso")
     } catch (err) {
         return res.status(500).send(err.message);
