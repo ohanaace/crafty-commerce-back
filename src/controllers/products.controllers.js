@@ -98,6 +98,21 @@ export async function modifyProductQuantity(req, res) {
             return res.status(200).send("Quantidade de produto adicionada com sucesso");
         }
         if (type === "minus") {
+            const product = await db.collection("cart").aggregate([
+                { $match: { userId: user.userId } },
+                { $unwind: "$products" },
+                { $match: { "products._id": new ObjectId(id) } },
+                { $project: { product: "$products" } }
+            ]).toArray();
+
+            if (product[0].product.quantity === 1){
+                await db.collection("cart").updateOne(
+                    { userId: user.userId },
+                    { $pull: { products: { _id:  new ObjectId(id)} } }
+                );
+                return res.status(200).send("Produto deletado com sucesso");
+            }
+            
             await db.collection("cart").updateOne(
                 { userId: user.userId, "products._id": new ObjectId(id) },
                 { $inc: { "products.$.quantity": -1 } }
