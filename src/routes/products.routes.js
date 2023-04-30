@@ -15,6 +15,6 @@ prodRouter.get("/cartProducts", cartProductsList);
 prodRouter.post("/addProduct/:id", addProductCart);
 prodRouter.get("/deleteProduct/:id", deleteProductCart);
 prodRouter.post("/checkout", checkout);
-prodRouter.post ("/modifyProductQuantity/:type", modifyProductQuantity);
+prodRouter.get("/modifyProductQuantity/:type/:id", modifyProductQuantity);
 
 export default prodRouter;
