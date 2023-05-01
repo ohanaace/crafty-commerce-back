@@ -80,22 +80,39 @@ export async function cartProductsList(req, res) {
 export async function addProductCart(req, res) {
     const { id } = req.params;
     const { quantity } = req.body;
-    const token = res.locals.token;
-    const user = res.locals.user
+    const user = res.locals.user;
+    console.log(user)
 
     try {
-        const newProduct = await db.collection("products").findOne({_id: new ObjectId(id)});
-        const completeProduct = {...newProduct, quantity};
-        const prods = await db.collection("cart").findOne({ userId: user._id });
-        if (!prods) {
-            const products = [completeProduct];
-            await db.collection("cart").insertOne({ products, userId: user._id });
-        } else {
-            const editedProducts = [...prods.products, completeProduct];
-            await db.collection("cart").updateOne({ userId: user._id }, { $set: { products: editedProducts} });
-        }
+        const product = await db.collection("cart").aggregate([
+            { $match: { userId: user._id } },
+            { $unwind: "$products" },
+            { $match: { "products._id": new ObjectId(id) } },
+            { $project: { product: "$products" } }
+        ]).toArray();
+        console.log(product)
+        if (product.length === 0){
+            const newProduct = await db.collection("products").findOne({_id: new ObjectId(id)});
+            const completeProduct = {...newProduct, quantity};
+            const prods = await db.collection("cart").findOne({ userId: user._id });
+            if (!prods) {
+                const products = [completeProduct];
+                await db.collection("cart").insertOne({ products, userId: user._id });
+            } else {
+                const editedProducts = [...prods.products, completeProduct];
+                await db.collection("cart").updateOne({ userId: user._id }, { $set: { products: editedProducts} });
+            }
 
-        return res.status(200).send("Produtos adicionados no carrinho com sucesso")
+            return res.status(200).send("Produtos adicionados no carrinho com sucesso")
+        }
+        if (product.length !== 0){
+            await db.collection("cart").updateOne(
+                { userId: user._id, "products._id": new ObjectId(id) },
+                { $inc: { "products.$.quantity": 1 } }
+             );
+            return res.status(200).send("Quantidade de produto adicionada com sucesso");
+        }
+        
     } catch (err) {
 
         return res.status(500).send(err.message);
