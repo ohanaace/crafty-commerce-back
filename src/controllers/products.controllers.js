@@ -4,13 +4,13 @@ import { ObjectId } from "mongodb";
 
 export async function checkout(req, res) {
     // na página do carrinho de compras quando o usuário clicar no botão finalizar compra
-    const { payment } = req.body;
+    const { payment, subtotal} = req.body;
     const token = res.locals.token;
 
     try {
         const user = await db.collection("sessions").findOne({ token });
         const cart = await db.collection("cart").findOne({userId: user.userId});
-        return res.status(200).send({...cart, payment})
+        return res.status(200).send({...cart, payment, subtotal})
 
     } catch (err) {
         return res.status(500).send(err.message);
