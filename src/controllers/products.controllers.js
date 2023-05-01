@@ -10,7 +10,8 @@ export async function checkout(req, res) {
     try {
         const user = await db.collection("sessions").findOne({ token });
         const cart = await db.collection("cart").findOne({userId: user.userId});
-        await db.collection("checkout").insertOne({...cart, payment, subtotal})
+        delete cart._id;
+        await db.collection("checkout").insertOne({...cart, payment, subtotal});
         return res.sendStatus(200);
 
     } catch (err) {
