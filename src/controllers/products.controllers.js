@@ -10,7 +10,21 @@ export async function checkout(req, res) {
     try {
         const user = await db.collection("sessions").findOne({ token });
         const cart = await db.collection("cart").findOne({userId: user.userId});
-        return res.status(200).send({...cart, payment, subtotal})
+        await db.collection("checkout").insertOne({...cart, payment, subtotal})
+        return res.sendStatus(200);
+
+    } catch (err) {
+        return res.status(500).send(err.message);
+    }
+}
+
+export async function orderSummary (req, res){
+    const token = res.locals.token;
+
+    try {
+        const user = await db.collection("sessions").findOne({ token });
+        const cart = await db.collection("checkout").findOne({userId: user.userId});
+        return res.status(200).send(cart);
 
     } catch (err) {
         return res.status(500).send(err.message);
