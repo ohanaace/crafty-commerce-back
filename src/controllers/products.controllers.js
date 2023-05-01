@@ -12,6 +12,7 @@ export async function checkout(req, res) {
         const cart = await db.collection("cart").findOne({userId: user.userId});
         delete cart._id;
         await db.collection("checkout").insertOne({...cart, payment, subtotal});
+        await db.collection("cart").deleteOne({ userId: user.userId }); // deletar cart pós adição checkout
         return res.sendStatus(200);
 
     } catch (err) {
