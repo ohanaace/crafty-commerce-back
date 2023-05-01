@@ -26,7 +26,6 @@ export async function orderSummary (req, res){
         const user = await db.collection("sessions").findOne({ token });
         const cart = await db.collection("cart").findOne({ userId: user.userId });  
         res.status(200).send(cart);
-        await db.collection("cart").deleteOne({ userId: user.userId }); // deletar cart pós entrar em /checkout
 
     } catch (err) {
         return res.status(500).send(err.message);
