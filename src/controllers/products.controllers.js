@@ -40,7 +40,8 @@ export async function deleteCart (req, res){
         const cart = await db.collection("cart").findOne({ userId: user.userId });
         if (!cart) return res.status(404).send("Esse usuário ainda não tem carrinho");
         await db.collection("cart").deleteOne({ userId: user.userId });
-        return res.status(200).send("O carrinho do usuário foi deletado.")
+        await db.collection("checkout").deleteMany({ userId: user.userId });
+        return res.status(200).send("O carrinho e histórico de compras do usuário foi deletado.")
 
     } catch (err) {
         return res.status(500).send(err.message);
