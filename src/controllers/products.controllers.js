@@ -24,7 +24,7 @@ export async function orderSummary (req, res){
 
     try {
         const user = await db.collection("sessions").findOne({ token });
-        const cart = await db.collection("cart").findOne({ userId: user.userId });  
+        const cart = await db.collection("checkout").findOne({ userId: user.userId });  
         res.status(200).send(cart);
 
     } catch (err) {
