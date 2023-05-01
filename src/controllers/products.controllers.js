@@ -33,6 +33,21 @@ export async function orderSummary (req, res){
     }
 }
 
+export async function deleteCart (req, res){
+    const token = res.locals.token;
+
+    try {
+        const user = await db.collection("sessions").findOne({ token });
+        const cart = await db.collection("cart").findOne({ userId: user.userId });
+        if (!cart) return res.status(404).send("Esse usuário ainda não tem carrinho");
+        await db.collection("cart").deleteOne({ userId: user.userId });
+        return res.status(200).send("O carrinho do usuário foi deletado.")
+
+    } catch (err) {
+        return res.status(500).send(err.message);
+    }
+}
+
 export async function productsList(req, res) {
     try {
         const products = await db.collection("products").find().toArray();
@@ -70,7 +85,7 @@ export async function cartProductsList(req, res) {
     try {
         const user = res.locals.user;
         const prods = await db.collection("cart").findOne({ userId: user._id });
-        console.log(prods)
+        if(!prods) res.status(404).send("O usuário não possui produtos no carrinho!")
         return res.status(200).send(prods.products);
     } catch (err) {
         return res.status(500).send(err.message);
