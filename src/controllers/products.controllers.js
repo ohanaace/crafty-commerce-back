@@ -12,7 +12,6 @@ export async function checkout(req, res) {
         const cart = await db.collection("cart").findOne({userId: user.userId});
         delete cart._id;
         await db.collection("checkout").insertOne({...cart, payment, subtotal});
-        await db.collection("cart").deleteOne({ userId: user.userId }); // deletar cart pós adição checkout
         return res.sendStatus(200);
 
     } catch (err) {
@@ -25,8 +24,9 @@ export async function orderSummary (req, res){
 
     try {
         const user = await db.collection("sessions").findOne({ token });
-        const cart = await db.collection("checkout").findOne({userId: user.userId});
-        return res.status(200).send(cart);
+        const cart = await db.collection("cart").findOne({ userId: user.userId });  
+        res.status(200).send(cart);
+        await db.collection("cart").deleteOne({ userId: user.userId }); // deletar cart pós entrar em /checkout
 
     } catch (err) {
         return res.status(500).send(err.message);
